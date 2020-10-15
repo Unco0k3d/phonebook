@@ -4,7 +4,7 @@ import React from 'react'
 const Contacts=({contact,remove})=>{
     return(
         <div>
-            <p><b>{contact.name}:</b> {contact.number}
+            <p><b>{contact.name}</b> {contact.number}
             <button onClick={remove}>delete</button></p>
             
         </div>

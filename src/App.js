@@ -3,7 +3,7 @@ import Contacts from "./components/Contacts";
 import Search from './components/Search'
 import AddContact from './components/AddContact'
 import Notification from './components/Notification'
-import personService from './services/persons'
+import personsService from './services/persons'
 import axios from 'axios'
 
 function App() {
@@ -15,10 +15,7 @@ function App() {
   const [confirm,setConfirm]=useState(null)
 
   useEffect(()=>{
-    // personService
-    // .getAll()
-    axios.get('http://localhost:3001/persons')
-    .then(response=>setPersons(response.data))
+    personsService.getAll().then(response=>setPersons(response))
   },[])
 
   const handleSearchValue = (e) => setSearch(e.target.value);
@@ -26,9 +23,18 @@ function App() {
   const handleNumberValue = (e) => setNewNumber(e.target.value);
   
   const replaceNumber=(newContactObj)=>{
-    window.confirm(`${newContactObj.name} is already in your contacts dummy. Did you want to replace the number dummy?`)
+    window.confirm(`${newContactObj.name} exists in your contacts. Did you want to replace the number?`)
     const contact=persons.find(p=>p.name===newContactObj.name)
     const changedContact={...contact, number: newNumber}
+    axios.put(`http://localhost:3001/persons/${contact.id}`,changedContact)
+      .then(response=>setPersons(persons.map(p=>p.id===contact.id?
+        response.data : p
+        )))
+  }
+  const replaceName=(newContactObj)=>{
+    window.confirm(`${newContactObj.number} exists in your contacts. Did you want to replace the name?`)
+    const contact=persons.find(p=>p.number===newContactObj.number)
+    const changedContact={...contact,name: newName}
     axios.put(`http://localhost:3001/persons/${contact.id}`,changedContact)
       .then(response=>setPersons(persons.map(p=>p.id===contact.id?
         response.data : p
@@ -42,7 +48,7 @@ function App() {
       ({ name }) => name.toLowerCase() === newContactObj.name.toLowerCase()
     )
       ? replaceNumber(newContactObj)
-      : personService
+      : personsService
           .create(newContactObj)
           .then(returnedPerson=>{
             setPersons(persons.concat(returnedPerson))
@@ -51,6 +57,18 @@ function App() {
             setConfirm(`${newName} has been added`)
             setTimeout(()=>setConfirm(null),3000)
           })
+
+    persons.find(({number})=>number === newContactObj.number)
+        ? replaceName(newContactObj)
+        : personsService
+        .create(newContactObj)
+        .then(returnedPerson=>{
+          setPersons(persons.concat(returnedPerson))
+        })
+        .then(success=>{
+          setConfirm(`${newName} has been added`)
+          setTimeout(()=>setConfirm(null),3000)
+        })
           setNewName('')
           setNewNumber('')
   };
